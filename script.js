@@ -5,16 +5,112 @@ import "es-module-shims";
 const gamePanel = document.getElementById("game-panel");
 const startGameButton = document.getElementById("start-game");
 const volumeControl = document.getElementById("volume");
+const backgroundAudio = document.getElementById("backgroundAudio");
+const volumeIcon = document.getElementById("volumeIcon");
 const resetGameButton = document.getElementById("reset-game");
 const homeButton = document.getElementById("home-button");
 const scoreElement = document.getElementById("score");
 const highScoreElement = document.getElementById("high-score");
+const loadingScreen = document.getElementById("loading-screen");
+const progressBar = document.getElementById("progress-bar");
+const progressText = document.getElementById("progress-text");
+const heartsContainer = document.getElementById("hearts-container");
 let isGameRunning = false; // Flag to track if the game is running
+
+let isUserInteracted = false;
+let isMuted = false;
+
+// Start audio when user interacts
+volumeControl.addEventListener("input", () => {
+  if (!isUserInteracted) {
+    backgroundAudio.play().catch((error) => {
+      console.error("Audio play failed:", error);
+    });
+    isUserInteracted = true; // Mark user interaction
+  }
+
+  const volume = volumeControl.value;
+  console.log(`Volume set to: ${volume}`);
+  backgroundAudio.volume = volume / 100;
+  if (volume == 0) {
+    muteAudio(); // Mute if volume is 0
+  } else {
+    unmuteAudio(); // Unmute if volume is greater than 0
+  }
+});
+
+// Toggle mute/unmute when clicking the volume icon
+volumeIcon.addEventListener("click", () => {
+  if (isMuted) {
+    unmuteAudio();
+  } else {
+    muteAudio();
+  }
+});
+
+// Mute the audio and update icon
+function muteAudio() {
+  backgroundAudio.volume = 0;
+  volumeControl.value = 0; // Update slider to 0
+  volumeIcon.textContent = "🔇"; // Change icon to muted
+  isMuted = true;
+}
+
+// Unmute the audio and update icon
+function unmuteAudio() {
+  const volume = volumeControl.value;
+  backgroundAudio.volume = volume / 100;
+  volumeIcon.textContent = "🔊"; // Change icon to unmuted
+  isMuted = false;
+}
+let lives = 3; // Maximum lives
+const maxLives = 3; // Maximum lives
+
+function updateHeartsDisplay() {
+  heartsContainer.innerHTML = ""; // Clear existing hearts
+
+  for (let i = 0; i < lives; i++) {
+    const heart = document.createElement("span");
+    heart.innerText = "❤️"; // Heart emoji
+    heartsContainer.appendChild(heart);
+  }
+}
+
+// Function to simulate loading progress
+function simulateLoading() {
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 1;
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+
+    if (progress >= 100) {
+      clearInterval(interval);
+      hideLoadingScreen();
+    }
+  }, 30); // Adjust time interval for speed of progress
+}
+
+// Show the loading screen and start the progress simulation
+function showLoadingScreen() {
+  loadingScreen.style.display = "flex";
+  simulateLoading();
+}
+
+// Hide the loading screen after loading is complete
+function hideLoadingScreen() {
+  loadingScreen.style.display = "none";
+  gamePanel.style.display = "block"; // Show the game menu
+}
+
+// Initialize loading screen
+showLoadingScreen();
 
 resetGameButton.style.display = "none";
 homeButton.style.display = "none";
 scoreElement.style.display = "none";
 highScoreElement.style.display = "none";
+heartsContainer.style.display = "none";
 
 let currentScore = 0; // Current score that increases over time
 let highScore = localStorage.getItem("highScore") || 0; // Get the high score from localStorage
@@ -78,6 +174,7 @@ function returnToHome() {
   homeButton.style.display = "none"; // Hide the home button
   scoreElement.style.display = "none";
   highScoreElement.style.display = "none";
+  heartsContainer.style.display = "none";
 
   isGameRunning = false; // Set game state to stopped
 }
@@ -90,6 +187,10 @@ function resetGame() {
   // Reset cube position and velocity to initial state
   cube.position.set(0, 0, 0); // Cube position reset
   cube.velocity = { x: 0, y: -0.01, z: 0 }; // Cube velocity reset to stop movement
+
+  // Reset lives
+  lives = maxLives; // Reset lives
+  updateHeartsDisplay(); // Update hearts display
 
   // Reset key states to prevent unintended movement
   keys.a.pressed = false;
@@ -138,15 +239,13 @@ startGameButton.addEventListener("click", () => {
   homeButton.style.display = "block"; // Show home button
   scoreElement.style.display = "block";
   highScoreElement.style.display = "block";
+  heartsContainer.style.display = "block";
+
+  lives = maxLives; // Reset lives
+  updateHeartsDisplay(); // Initialize hearts display
 
   isGameRunning = true; // Set game to running state
   animate(); // Start the game loop
-});
-
-volumeControl.addEventListener("input", (event) => {
-  const volume = event.target.value;
-  console.log(`Volume set to: ${volume}`);
-  // Adjust game audio here if necessary
 });
 
 const scene = new THREE.Scene();
@@ -212,6 +311,8 @@ class Box extends THREE.Mesh {
     this.gravity = -0.002;
 
     this.zAcceleration = zAcceleration;
+
+    this.jumpCount = 0; // Add jump counter
   }
 
   updateSides() {
@@ -259,7 +360,10 @@ class Box extends THREE.Mesh {
       const friction = 0.5;
       this.velocity.y *= friction;
       this.velocity.y = -this.velocity.y;
-    } else this.position.y += this.velocity.y;
+      this.jumpCount = 0; // Reset jump count when touching the ground
+    } else {
+      this.position.y += this.velocity.y;
+    }
   }
 }
 
@@ -282,9 +386,9 @@ const cube = new Box({
     z: 0,
   },
   position: {
-    x: 0, // Keep the X-axis at 0
-    y: 0, // Keep the Y-axis at 0
-    z: 0, // Move the cube 5 units backward along the Z-axis
+    x: 0,
+    y: 0,
+    z: 0,
   },
 });
 cube.castShadow = true;
@@ -347,7 +451,11 @@ window.addEventListener("keydown", (event) => {
       keys.w.pressed = true;
       break;
     case "Space":
-      cube.velocity.y = 0.08;
+      if (cube.jumpCount < 2) {
+        // Allow only 2 consecutive jumps
+        cube.velocity.y = 0.08;
+        cube.jumpCount++; // Increment jump count
+      }
       break;
   }
 });
@@ -369,12 +477,24 @@ window.addEventListener("keyup", (event) => {
   }
 });
 
-const enemies = [];
+// Load the sound
+const listener = new THREE.AudioListener();
+camera.add(listener);
 
+const sound = new THREE.Audio(listener);
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load("audio/explode.mp3", (buffer) => {
+  sound.setBuffer(buffer);
+  sound.setLoop(false);
+  sound.setVolume(15.0);
+});
+
+const enemies = [];
 let frames = 0;
 let spawnRate = 200;
+
 function animate() {
-  if (!isGameRunning) return; // Exit if the game is not running
+  if (!isGameRunning) return;
 
   const animationId = requestAnimationFrame(animate);
 
@@ -390,29 +510,50 @@ function animate() {
   else if (keys.w.pressed) cube.velocity.z = -0.05;
 
   cube.update(ground);
+
+  // Track the last collision with a 3D cube
+  let lastCollisionWith3D = false;
+
   enemies.forEach((enemy, index) => {
     enemy.update(ground);
 
-    // Check for collision
-    if (
-      boxCollision({
-        box1: cube,
-        box2: enemy,
-      })
-    ) {
-      cancelAnimationFrame(animationId); // Stop the game
-      isGameRunning = false;
-      alert("Game Over!"); // Show a game-over message
-      resetGameButton.style.display = "block"; // Show reset button
+    // Check for collision between green cube and red cube (enemy)
+    if (boxCollision({ box1: cube, box2: enemy })) {
+      if (!sound.isPlaying) {
+        sound.play(); // Play the collision sound
+      }
+
+      // Remove the red cube (enemy) from the scene and the enemies array
+      scene.remove(enemy);
+      enemies.splice(index, 1);
+
+      lives--; // Decrease lives on collision
+      updateHeartsDisplay(); // Update hearts display
+
+      if (lives <= 0) {
+        // If lives are 0, game over
+        cancelAnimationFrame(animationId); // Stop the game
+        isGameRunning = false;
+        alert("Game Over!"); // Show a game-over message
+        resetGameButton.style.display = "block"; // Show reset button
+      } else {
+        // Optionally, add a small delay before the next collision is processed
+      }
+
+      // Track that the last collision was with the red cube (3D object)
+      lastCollisionWith3D = true;
     }
   });
+
+  // If the last collision was with a 3D cube, trigger game over
+  if (lastCollisionWith3D) {
+    endGame(); // End the game if the last collision was with a 3D cube
+  }
 
   function getRandomHeight(min, max) {
     return Math.random() * (max - min) + min;
   }
 
-  // Spawn enemies
-  // Spawn enemies
   // Spawn enemies
   if (frames % spawnRate === 0) {
     if (spawnRate > 20) spawnRate -= 20;
@@ -433,7 +574,7 @@ function animate() {
         y: 0,
         z: gameSpeed, // Use gameSpeed for enemy speed
       },
-      color: "red",
+      color: "red", // Red enemy cube
       zAcceleration: true,
     });
     enemy.castShadow = true;
