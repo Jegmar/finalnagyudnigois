@@ -249,28 +249,52 @@ function updateRoad() {
   ground.material.map.offset.set(0, roadOffset);
 }
 
-// Falling cubes (at the end of the road)
+// Falling cubes (sliding towards the car)
 const fallingCubes = [];
 const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
 
+// Placeholder texture loader for cubes
+const cubeTexture = new THREE.TextureLoader().load(
+  "static/textures/bricks.jpg", // Replace with your brick texture path
+  () => console.log("Brick texture loaded!"),
+  undefined,
+  (error) => console.error("Brick texture failed to load:", error)
+);
+
+const cubeMaterial = new THREE.MeshStandardMaterial({
+  map: cubeTexture,
+});
+
+// Function to spawn sliding cubes
 function spawnFallingCubes() {
-  if (Math.random() < 0.1) {
-    let newCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    const roadWidth = 10;
-    const cubeXPosition = (Math.random() * roadWidth) - roadWidth / 2; 
-    newCube.position.set(cubeXPosition, 10, -70); 
-    newCube.velocity = new THREE.Vector3(0, -0.1, 0); // Add initial downward velocity
+  const spawnProbability = 0.02; // Lower spawn rate for fewer cubes
+  if (Math.random() < spawnProbability) {
+    const newCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+
+    // Set random position for the cube within road bounds
+    const roadWidth = 8; // Slightly narrower than the road width for placement
+    const cubeXPosition = (Math.random() * roadWidth) - roadWidth / 2; // Random X position
+    const cubeZPosition = -50; // Starting far from the camera
+
+    newCube.position.set(cubeXPosition, -2.5, cubeZPosition);
+    newCube.velocity = new THREE.Vector3(0, 0, 0.2); // Sliding speed towards the player
+
+    // Add cube to the scene and array
     fallingCubes.push(newCube);
     scene.add(newCube);
   }
 }
 
+// Function to update cubes' positions
 function updateFallingCubes() {
   for (let i = fallingCubes.length - 1; i >= 0; i--) {
     const cube = fallingCubes[i];
-    cube.position.add(cube.velocity);
-    if (cube.position.y < -3) {
+
+    // Move cube along the Z-axis towards the player
+    cube.position.z += cube.velocity.z;
+
+    // Remove cubes that move past the player
+    if (cube.position.z > 5) {
       scene.remove(cube);
       fallingCubes.splice(i, 1);
     }
@@ -278,8 +302,6 @@ function updateFallingCubes() {
 }
 
 // Collision detection
-let hitCount = 0;
-
 function checkCollisions() {
   for (let i = fallingCubes.length - 1; i >= 0; i--) {
     const cube = fallingCubes[i];
@@ -287,15 +309,13 @@ function checkCollisions() {
     const cubeBB = new THREE.Box3().setFromObject(cube);
 
     if (carBB.intersectsBox(cubeBB)) {
+      // Handle collision: Remove cube, deduct life, and update UI
       scene.remove(cube);
       fallingCubes.splice(i, 1);
-      hitCount++;
-      if (hitCount >= 3) {
-        cancelAnimationFrame(animationId);
-        alert("Game Over!");
-      }
       lives--;
       updateHeartsDisplay();
+
+      // Game over if no lives are left
       if (lives <= 0) {
         cancelAnimationFrame(animationId);
         alert("Game Over!");
@@ -304,22 +324,26 @@ function checkCollisions() {
   }
 }
 
-// Game animation
+// Animation function
 function animate() {
   if (isGameRunning) {
     requestAnimationFrame(animate);
+
+    // Update components
     updateScore();
     updateRoad();
     spawnFallingCubes();
     updateFallingCubes();
     checkCollisions();
 
+    // Move the car based on velocity
     car.position.x += carVelocity.x;
     car.position.z += carVelocity.z;
 
-    // Prevent car from leaving the road
-    car.position.x = Math.max(Math.min(car.position.x, 4.5), -4.5); 
+    // Restrict car movement to within road boundaries
+    car.position.x = Math.max(Math.min(car.position.x, 4.5), -4.5);
 
+    // Render the scene
     renderer.render(scene, camera);
   }
 }
