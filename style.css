@@ -1,7 +1,8 @@
 body {
   margin: 0;
   overflow: hidden;
-  background: #527386;
+  background: url('/static/textures/sky.jpg') no-repeat center center fixed; /* Add a sky image */
+  background-size: cover; /* Ensure the background image covers the whole screen */
 }
 
 #game-panel {
@@ -56,12 +57,12 @@ body {
 
 #score {
   position: absolute;
-
   top: 10px;
   left: 1050px;
   color: white;
   font-size: 20px;
 }
+
 #high-score {
   position: absolute;
   top: 10px;
