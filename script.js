@@ -16,6 +16,20 @@ const loadingScreen = document.getElementById("loading-screen");
 const progressBar = document.getElementById("progress-bar");
 const progressText = document.getElementById("progress-text");
 const heartsContainer = document.getElementById("hearts-container");
+const howToPlayButton = document.getElementById("how-to-play");
+const howToPlayInstructions = document.getElementById("how-to-play-instructions");
+const closeInstructionsButton = document.getElementById("close-instructions");
+
+howToPlayButton.addEventListener("click", () => {
+  gamePanel.style.display = "none";
+  howToPlayInstructions.style.display = "block"; // Show instructions
+  
+});
+
+closeInstructionsButton.addEventListener("click", () => {
+  howToPlayInstructions.style.display = "none"; // Hide instructions
+  gamePanel.style.display = "block"; // Show the game panel
+});
 
 let isGameRunning = false;
 let isUserInteracted = false;
@@ -80,6 +94,7 @@ function simulateLoading() {
 function showLoadingScreen() {
   loadingScreen.style.display = "flex";
   simulateLoading();
+  gamePanel.style.display = "none";
 }
 
 function hideLoadingScreen() {
