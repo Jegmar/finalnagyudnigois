@@ -93,16 +93,16 @@ body {
 #score {
   position: absolute;
   top: 20px;
-  left: 1020px;
-  color: white;
+  left: 1340px;
+  color: rgb(0, 0, 0);
   font-size: 11px;
 }
 
 #high-score {
   position: absolute;
   top: 20px;
-  left: 1160px;
-  color: white;
+  left: 1560px;
+  color: rgb(0, 0, 0);
   font-size: 11px;
 }
 
