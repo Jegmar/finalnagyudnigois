@@ -91,7 +91,7 @@ function simulateLoading() {
     }
   }, 30);
 }
-
+//Autoplay music after loadingscreen
 function playBackgroundAudioAfterLoading() {
   if (!isUserInteracted) {
     backgroundAudio.play().catch((error) => console.error("Audio play failed:", error));
