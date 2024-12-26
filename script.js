@@ -87,8 +87,16 @@ function simulateLoading() {
     if (progress >= 100) {
       clearInterval(interval);
       hideLoadingScreen();
+      playBackgroundAudioAfterLoading(); // Play the audio after loading
     }
   }, 30);
+}
+
+function playBackgroundAudioAfterLoading() {
+  if (!isUserInteracted) {
+    backgroundAudio.play().catch((error) => console.error("Audio play failed:", error));
+    isUserInteracted = true;
+  }
 }
 
 function showLoadingScreen() {
@@ -162,6 +170,10 @@ function resetGame() {
 
   roadOffset = 0; // Reset the road offset to start the texture from the beginning
 
+  // Reset road speed and time elapsed
+  roadSpeed = 0.001;  // Start with slow speed again
+  timeElapsed = 0;  // Reset time elapsed for gradual speed increase
+
   if (!isGameRunning) {
     isGameRunning = true;
     animate();
@@ -179,6 +191,10 @@ startGameButton.addEventListener("click", () => {
 
   lives = maxLives;
   updateHeartsDisplay();
+
+  // Reset road speed and time elapsed
+  roadSpeed = 0.001;  // Start with slow speed again
+  timeElapsed = 0;  // Reset time elapsed for gradual speed increase
 
   isGameRunning = true;
   animate();
@@ -210,7 +226,7 @@ loader.load("/models/car2.glb", (gltf) => {
 });
 
 const carVelocity = { x: 0, y: 0, z: 0 };
-const carSpeed = 0.1;
+const carSpeed = 0.07;
 
 // Car movement logic
 window.addEventListener("keydown", (event) => {
@@ -253,7 +269,10 @@ scene.add(directionalLight);
 
 // Road setup
 let roadOffset = 0;
-const roadSpeed = 0.05;
+let roadSpeed = 0.001; // Initial speed of the road
+const maxRoadSpeed = 0.05; // Max speed that the road can reach
+const speedIncreaseRate = 0.000001; // Rate at which road speed increases
+let timeElapsed = 0; // Track the total time the game has been running
 
 const roadTexture = new THREE.TextureLoader().load("/textures/road.png", () => {
   console.log("Texture Loaded!");
@@ -276,7 +295,13 @@ roadTexture.wrapT = THREE.RepeatWrapping;
 roadTexture.repeat.set(1, 1); // Adjust for the road texture repeat
 
 function updateRoad() {
-  roadOffset += roadSpeed;
+  // Gradually increase the road speed over time
+  timeElapsed += 1; // You can also use delta time for more precise control
+  if (roadSpeed < maxRoadSpeed) {
+    roadSpeed += speedIncreaseRate; // Speed up the road incrementally
+  }
+
+  roadOffset -= roadSpeed; // Move the road
   if (roadOffset >= 1) roadOffset = 0;
   ground.material.map.offset.set(0, roadOffset);
 }
@@ -343,7 +368,8 @@ function checkCollisions() {
     const cubeBB = new THREE.Box3().setFromObject(cube);
 
     if (carBB.intersectsBox(cubeBB)) {
-      // Play pop sound
+      // Play pop sound (allow overlapping)
+      const popSound = new Audio('/audio/pop.mp3'); // Create a new sound instance for each collision
       popSound.play();
 
       // Handle collision: Remove cube, deduct life, and update UI
@@ -355,8 +381,13 @@ function checkCollisions() {
       // Game over if no lives are left
       if (lives <= 0) {
         isGameRunning = false; // Stop the game loop
-        alert("Game Over!");
-        returnToHome(); // Automatically return to home after game over
+
+        // Delay Game Over to allow sound to play before alert
+        setTimeout(() => {
+          alert("Game Over!");
+          returnToHome(); // Automatically return to home after game over
+        }, 100); // Adjust the delay time if needed (in milliseconds)
+
         break; // Break out of the loop to prevent further collision checks
       }
     }
