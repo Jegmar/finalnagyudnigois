@@ -87,9 +87,16 @@ function simulateLoading() {
     if (progress >= 100) {
       clearInterval(interval);
       hideLoadingScreen();
-      backgroundAudio.play().catch((error) => console.error("Audio play failed:", error));
+      playBackgroundAudioAfterLoading();
     }
   }, 30);
+}
+
+function playBackgroundAudioAfterLoading() {
+  if (!isUserInteracted) {
+    backgroundAudio.play().catch((error) => console.error("Audio play failed:", error));
+    isUserInteracted = true;
+  }
 }
 
 
