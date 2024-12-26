@@ -223,7 +223,7 @@ scene.add(directionalLight);
 let roadOffset = 0;
 const roadSpeed = 0.05;
 
-const roadTexture = new THREE.TextureLoader().load("static/textures/road.jpg", () => {
+const roadTexture = new THREE.TextureLoader().load("static/textures/road.png", () => {
   console.log("Texture Loaded!");
 }, undefined, (error) => {
   console.error("Texture failed to load:", error);
@@ -241,7 +241,7 @@ scene.add(ground);
 
 roadTexture.wrapS = THREE.RepeatWrapping;
 roadTexture.wrapT = THREE.RepeatWrapping;
-roadTexture.repeat.set(10, 1); // Adjust for the road texture repeat
+roadTexture.repeat.set(1, 10); // Adjust for the road texture repeat
 
 function updateRoad() {
   roadOffset += roadSpeed;
