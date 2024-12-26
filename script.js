@@ -301,6 +301,7 @@ function updateFallingCubes() {
   }
 }
 
+
 // Collision detection
 function checkCollisions() {
   if (lives <= 0) {
@@ -323,6 +324,7 @@ function checkCollisions() {
       if (lives <= 0) {
         isGameRunning = false; // Stop the game loop
         alert("Game Over!");
+        returnToHome(); // Automatically return to home after game over
         break; // Break out of the loop to prevent further collision checks
       }
     }
