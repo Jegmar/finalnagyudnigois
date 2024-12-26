@@ -95,6 +95,8 @@ function showLoadingScreen() {
   loadingScreen.style.display = "flex";
   simulateLoading();
   gamePanel.style.display = "none";
+  scoreElement.style.display = "none";
+  highScoreElement.style.display = "none";
 }
 
 function hideLoadingScreen() {
@@ -197,30 +199,30 @@ const carSpeed = 0.1;
 
 // Car movement logic
 window.addEventListener("keydown", (event) => {
-  switch (event.code) {
-    case "ArrowLeft":
+  switch (event.key) {
+    case "a": // Move left
       carVelocity.x = -carSpeed;
       break;
-    case "ArrowRight":
+    case "d": // Move right
       carVelocity.x = carSpeed;
       break;
-    case "ArrowDown":
+    case "s": // Move down
       carVelocity.z = carSpeed;
       break;
-    case "ArrowUp":
+    case "w": // Move up
       carVelocity.z = -carSpeed;
       break;
   }
 });
 
 window.addEventListener("keyup", (event) => {
-  switch (event.code) {
-    case "ArrowLeft":
-    case "ArrowRight":
+  switch (event.key) {
+    case "a":
+    case "d":
       carVelocity.x = 0;
       break;
-    case "ArrowDown":
-    case "ArrowUp":
+    case "s":
+    case "w":
       carVelocity.z = 0;
       break;
   }
@@ -307,15 +309,12 @@ function updateFallingCubes() {
 
     // Move cube along the Z-axis towards the player
     cube.position.z += cube.velocity.z;
-
-    // Remove cubes that move past the player
-    if (cube.position.z > 5) {
-      scene.remove(cube);
-      fallingCubes.splice(i, 1);
-    }
   }
 }
 
+
+// Load the sound
+const popSound = new Audio('public/audio/pop.mp3');
 
 // Collision detection
 function checkCollisions() {
@@ -329,6 +328,9 @@ function checkCollisions() {
     const cubeBB = new THREE.Box3().setFromObject(cube);
 
     if (carBB.intersectsBox(cubeBB)) {
+      // Play pop sound
+      popSound.play();
+
       // Handle collision: Remove cube, deduct life, and update UI
       scene.remove(cube);
       fallingCubes.splice(i, 1);
@@ -345,6 +347,7 @@ function checkCollisions() {
     }
   }
 }
+
 
 // Animation function
 let animationId;  // Store the animation ID to cancel the loop properly

@@ -3,7 +3,7 @@ body {
   overflow: hidden;
   background: url('/static/textures/sky.jpg') no-repeat center center fixed;
   background-size: cover;
-  font-family: 'Courier New', Courier, monospace; /* Retro pixelated font */
+  font-family: 'Press Start 2P', cursive; /* Retro font */
 }
 
 #game-panel {
@@ -18,7 +18,7 @@ body {
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 10;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Press Start 2P', cursive; /* Retro font */
 }
 
 #game-panel {
@@ -32,11 +32,14 @@ body {
 #game-panel input {
   margin: 10px 0;
   padding: 10px;
-  font-size: 16px;
+  font-size: 13px;
+  font-family: 'Press Start 2P', cursive;
+
 }
 
 #how-to-play {
   margin-top: 20px;
+  font-family: 'Press Start 2P', cursive;
 }
 
 #how-to-play-instructions {
@@ -58,6 +61,7 @@ body {
   margin-top: 20px;
   padding: 10px;
   font-size: 16px;
+  font-family: 'Press Start 2P', cursive;
 }
 
 #reset-game,
@@ -70,32 +74,36 @@ body {
   border-radius: 5px;
   cursor: pointer;
   display: none;
+  font-family: 'Press Start 2P', cursive; /* Retro font */
+  font-size: 8px;
 }
 
 #reset-game {
   left: 12px;
   background: #0369a1;
+  font-family: 'Press Start 2P', cursive; /* Retro font */
 }
 
 #home-button {
   left: 120px;
   background: #2d7f39;
+  font-family: 'Press Start 2P', cursive; /* Retro font */
 }
 
 #score {
   position: absolute;
-  top: 10px;
-  left: 1050px;
+  top: 20px;
+  left: 1030px;
   color: white;
-  font-size: 20px;
+  font-size: 11px;
 }
 
 #high-score {
   position: absolute;
-  top: 10px;
-  left: 1180px;
+  top: 20px;
+  left: 1160px;
   color: white;
-  font-size: 20px;
+  font-size: 11px;
 }
 
 #loading-screen {
