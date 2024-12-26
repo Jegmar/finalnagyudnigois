@@ -107,7 +107,7 @@ function updateScore() {
   highScoreElement.innerText = `High Score: ${highScore}`;
 }
 
-setInterval(updateScore, 10);
+setInterval(updateScore, 5);
 
 homeButton.addEventListener("click", returnToHome);
 
@@ -255,7 +255,7 @@ const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
 
 // Placeholder texture loader for cubes
 const cubeTexture = new THREE.TextureLoader().load(
-  "static/textures/bricks.jpg", // Replace with your brick texture path
+  "/static/textures/bricks.jpg", // Replace with your brick texture path
   () => console.log("Brick texture loaded!"),
   undefined,
   (error) => console.error("Brick texture failed to load:", error)
@@ -303,6 +303,10 @@ function updateFallingCubes() {
 
 // Collision detection
 function checkCollisions() {
+  if (lives <= 0) {
+    return; // Don't check for collisions if the game is over
+  }
+
   for (let i = fallingCubes.length - 1; i >= 0; i--) {
     const cube = fallingCubes[i];
     const carBB = new THREE.Box3().setFromObject(car);
@@ -317,33 +321,38 @@ function checkCollisions() {
 
       // Game over if no lives are left
       if (lives <= 0) {
-        cancelAnimationFrame(animationId);
+        isGameRunning = false; // Stop the game loop
         alert("Game Over!");
+        break; // Break out of the loop to prevent further collision checks
       }
     }
   }
 }
 
 // Animation function
+let animationId;  // Store the animation ID to cancel the loop properly
+
 function animate() {
-  if (isGameRunning) {
-    requestAnimationFrame(animate);
-
-    // Update components
-    updateScore();
-    updateRoad();
-    spawnFallingCubes();
-    updateFallingCubes();
-    checkCollisions();
-
-    // Move the car based on velocity
-    car.position.x += carVelocity.x;
-    car.position.z += carVelocity.z;
-
-    // Restrict car movement to within road boundaries
-    car.position.x = Math.max(Math.min(car.position.x, 4.5), -4.5);
-
-    // Render the scene
-    renderer.render(scene, camera);
+  if (!isGameRunning) {
+    return; // Exit if the game is over
   }
+
+  animationId = requestAnimationFrame(animate); // Request the next frame if the game is running
+
+  // Update components
+  updateScore();
+  updateRoad();
+  spawnFallingCubes();
+  updateFallingCubes();
+  checkCollisions();
+
+  // Move the car based on velocity
+  car.position.x += carVelocity.x;
+  car.position.z += carVelocity.z;
+
+  // Restrict car movement to within road boundaries
+  car.position.x = Math.max(Math.min(car.position.x, 4.5), -4.5);
+
+  // Render the scene
+  renderer.render(scene, camera);
 }
