@@ -148,11 +148,26 @@ function resetGame() {
   currentScore = 0;
   scoreElement.innerText = `Score: ${currentScore}`;
 
+  // Reset the car position to the initial position
+  car.position.set(0, -3, 0);
+  carVelocity.x = 0;
+  carVelocity.z = 0;
+
+  // Clear falling cubes and reset the array
+  for (let i = fallingCubes.length - 1; i >= 0; i--) {
+    const cube = fallingCubes[i];
+    scene.remove(cube); // Remove each cube from the scene
+    fallingCubes.splice(i, 1); // Remove cube from the array
+  }
+
+  roadOffset = 0; // Reset the road offset to start the texture from the beginning
+
   if (!isGameRunning) {
     isGameRunning = true;
     animate();
   }
 }
+
 
 startGameButton.addEventListener("click", () => {
   gamePanel.style.display = "none";
@@ -187,7 +202,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 const loader = new GLTFLoader();
 let car;
 
-loader.load("static/models/car2.glb", (gltf) => {
+loader.load("/models/car2.glb", (gltf) => {
   car = gltf.scene;
   car.scale.set(1, 1, 1);
   car.position.set(0, -3, 0);
@@ -240,7 +255,7 @@ scene.add(directionalLight);
 let roadOffset = 0;
 const roadSpeed = 0.05;
 
-const roadTexture = new THREE.TextureLoader().load("static/textures/road.png", () => {
+const roadTexture = new THREE.TextureLoader().load("/textures/road.png", () => {
   console.log("Texture Loaded!");
 }, undefined, (error) => {
   console.error("Texture failed to load:", error);
@@ -258,7 +273,7 @@ scene.add(ground);
 
 roadTexture.wrapS = THREE.RepeatWrapping;
 roadTexture.wrapT = THREE.RepeatWrapping;
-roadTexture.repeat.set(1, 10); // Adjust for the road texture repeat
+roadTexture.repeat.set(1, 1); // Adjust for the road texture repeat
 
 function updateRoad() {
   roadOffset += roadSpeed;
@@ -272,7 +287,7 @@ const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
 
 // Placeholder texture loader for cubes
 const cubeTexture = new THREE.TextureLoader().load(
-  "/static/textures/bricks.jpg", // Replace with your brick texture path
+  "/textures/brick.jpg", // Replace with your brick texture path
   () => console.log("Brick texture loaded!"),
   undefined,
   (error) => console.error("Brick texture failed to load:", error)
@@ -314,7 +329,7 @@ function updateFallingCubes() {
 
 
 // Load the sound
-const popSound = new Audio('public/audio/pop.mp3');
+const popSound = new Audio('/audio/pop.mp3');
 
 // Collision detection
 function checkCollisions() {
