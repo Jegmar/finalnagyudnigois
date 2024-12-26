@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import "es-module-shims";
 
+
 const gamePanel = document.getElementById("game-panel");
 const startGameButton = document.getElementById("start-game");
 const volumeControl = document.getElementById("volume");
@@ -481,17 +482,29 @@ window.addEventListener("keyup", (event) => {
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
-const sound = new THREE.Audio(listener);
-const audioLoader = new THREE.AudioLoader();
-audioLoader.load("audio/explode.mp3", (buffer) => {
-  sound.setBuffer(buffer);
-  sound.setLoop(false);
-  sound.setVolume(15.0);
-});
+// Create an array to hold the sound instances
+const sounds = [];
+
+// Function to play the sound
+function playCollisionSound() {
+  const sound = new THREE.Audio(listener); // Create a new sound instance each time
+  const audioLoader = new THREE.AudioLoader();
+
+  audioLoader.load("audio/pop.mp3", (buffer) => {
+    sound.setBuffer(buffer);
+    sound.setLoop(false);
+    sound.setVolume(1.0);
+    sound.play(); // Play the sound immediately
+  });
+
+  // Push the sound instance to the array to keep track of it
+  sounds.push(sound);
+}
+
 
 const enemies = [];
 let frames = 0;
-let spawnRate = 200;
+let spawnRate = 400;
 
 function animate() {
   if (!isGameRunning) return;
@@ -519,9 +532,8 @@ function animate() {
 
     // Check for collision between green cube and red cube (enemy)
     if (boxCollision({ box1: cube, box2: enemy })) {
-      if (!sound.isPlaying) {
-        sound.play(); // Play the collision sound
-      }
+      // Play sound on collision
+      playCollisionSound(); // Play the sound immediately
 
       // Remove the red cube (enemy) from the scene and the enemies array
       scene.remove(enemy);
@@ -531,11 +543,17 @@ function animate() {
       updateHeartsDisplay(); // Update hearts display
 
       if (lives <= 0) {
-        // If lives are 0, game over
-        cancelAnimationFrame(animationId); // Stop the game
+        // Play the game-over sound first
+        playCollisionSound(); // Play sound for game over
+
         isGameRunning = false;
-        alert("Game Over!"); // Show a game-over message
-        resetGameButton.style.display = "block"; // Show reset button
+        
+        setTimeout(() => {
+          // If lives are 0, game over
+          cancelAnimationFrame(animationId); // Stop the game
+          alert("Game Over!"); // Show a game-over message
+          resetGameButton.style.display = "block"; // Show reset button
+        }, 300); // Delay the alert by 300ms to let the sound finish
       } else {
         // Optionally, add a small delay before the next collision is processed
       }
