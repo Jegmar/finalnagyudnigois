@@ -422,4 +422,3 @@ function animate() {
   // Render the scene
   renderer.render(scene, camera);
 }
-//this comment is for commit testing
